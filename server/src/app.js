@@ -6,13 +6,17 @@ import authRoutes from './routes/authRoutes.js';
 import articleRoutes from './routes/articleRoutes.js';
 import bookmarkRoutes from './routes/bookmarkRoutes.js';
 
+import { apiLimiter, authLimiter } from './middleware/rateLimiter.js';
+
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
+app.use('/api', apiLimiter);
+
 app.use('/api/health', healthRoutes);
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/articles', articleRoutes);
 app.use('/api/bookmarks', bookmarkRoutes);
 
