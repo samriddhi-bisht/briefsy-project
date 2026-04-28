@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -12,23 +12,28 @@ export default function Navbar() {
   };
 
   return (
-    <nav style={{ padding: '16px 24px', borderBottom: '1px solid #ddd', display: 'flex', justifyContent: 'space-between' }}>
-      <Link to="/" style={{ fontWeight: 'bold', fontSize: 22, textDecoration: 'none', color: '#111' }}>
-        Briefsy
+    <header className="topbar">
+      <Link to="/" className="brand">
+        <span className="brand-mark">b</span>
+        <span>
+          <strong>Briefsy</strong>
+          <small>your daily knowledge desk</small>
+        </span>
       </Link>
 
-      <div style={{ display: 'flex', gap: 16 }}>
-        <Link to="/">Home</Link>
-        {token && <Link to="/bookmarks">Bookmarks</Link>}
+      <nav className="nav-links">
+        <NavLink to="/">Desk</NavLink>
+        {token && <NavLink to="/bookmarks">Saved</NavLink>}
+
         {!token ? (
           <>
-            <Link to="/login">Login</Link>
-            <Link to="/register">Register</Link>
+            <NavLink to="/login">Login</NavLink>
+            <Link to="/register" className="nav-cta">Join Briefsy</Link>
           </>
         ) : (
-          <button onClick={logout}>Logout</button>
+          <button className="logout-btn" onClick={logout}>Logout</button>
         )}
-      </div>
-    </nav>
+      </nav>
+    </header>
   );
 }
