@@ -339,3 +339,52 @@ button {
     margin-top: 20px;
   }
 }
+
+.auth-wrap {
+  min-height: 70vh;
+  display: grid;
+  place-items: center;
+}
+
+.auth-card {
+  width: min(460px, 100%);
+  border: 1px solid #252018;
+  border-radius: 34px;
+  padding: 34px;
+  background: rgba(255, 251, 241, 0.9);
+  box-shadow: 8px 8px 0 #252018;
+}
+
+.auth-card h1 {
+  margin: 0 0 24px;
+  font-size: 44px;
+  letter-spacing: -0.05em;
+}
+
+.auth-card input,
+.auth-card select {
+  width: 100%;
+  border: 1px solid #252018;
+  border-radius: 18px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  background: #fff8e8;
+  color: #252018;
+  font: inherit;
+}
+
+.auth-card button {
+  width: 100%;
+  border: 1px solid #252018;
+  border-radius: 999px;
+  padding: 14px;
+  background: #ffcf70;
+  color: #252018;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 #252018;
+}
+
+.personalized-btn {
+  background: #dbe8ff !important;
+}

@@ -14,6 +14,7 @@ export default function Home() {
   const [category, setCategory] = useState('technology');
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [viewTitle, setViewTitle] = useState('Tech Pulse');
 
   const activeCategory = categories.find((item) => item.key === category);
 
@@ -22,9 +23,23 @@ export default function Home() {
       setLoading(true);
       const res = await API.get(`/articles/category/${category}`);
       setArticles(res.data);
+      setViewTitle(activeCategory?.label || 'Today’s Brief');
     } catch (error) {
       console.error(error);
       alert('Failed to fetch articles');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchPersonalized = async () => {
+    try {
+      setLoading(true);
+      const res = await API.get('/articles/personalized');
+      setArticles(res.data.articles);
+      setViewTitle('My Brief');
+    } catch (error) {
+      alert(error.response?.data?.message || 'Login required for personalized feed');
     } finally {
       setLoading(false);
     }
@@ -60,6 +75,11 @@ export default function Home() {
               <small>{item.note}</small>
             </button>
           ))}
+
+          <button className="category-tile personalized-btn" onClick={fetchPersonalized}>
+            <span>My Brief</span>
+            <small>based on your interest</small>
+          </button>
         </div>
       </aside>
 
@@ -67,7 +87,7 @@ export default function Home() {
         <div className="hero-card">
           <div>
             <p className="eyebrow">Today’s brief</p>
-            <h1>{activeCategory?.label}</h1>
+            <h1>{viewTitle}</h1>
             <p>
               Bite-sized updates curated for quick reading, deeper thinking,
               and smarter conversations.
