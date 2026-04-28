@@ -1,12 +1,15 @@
 import express from 'express';
-import { getArticlesByCategory, fetchNews } from '../controllers/articleController.js';
+import {
+  getArticlesByCategory,
+  fetchNews,
+  getPersonalizedArticles,
+} from '../controllers/articleController.js';
+import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// fetch from API and store in DB
 router.get('/fetch/:category', fetchNews);
-
-// get from DB
 router.get('/category/:category', getArticlesByCategory);
+router.get('/personalized', protect, getPersonalizedArticles);
 
 export default router;
