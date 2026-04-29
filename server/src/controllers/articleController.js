@@ -1,10 +1,21 @@
 import pool from '../config/db.js';
 import { fetchAndStoreNews } from '../services/newsService.js';
+import cache from '../config/cache.js';
 
 // GET articles from DB by category
 export const getArticlesByCategory = async (req, res) => {
   try {
     const { category } = req.params;
+    const cacheKey = `articles:${category}`;
+
+    const cachedArticles = cache.get(cacheKey);
+
+    if (cachedArticles) {
+      console.log(`Cache HIT: ${cacheKey}`);
+      return res.status(200).json(cachedArticles);
+    }
+
+    console.log(`Cache MISS: ${cacheKey}`);
 
     const result = await pool.query(
       `SELECT id, title, summary, source, category, url, image_url, published_at
@@ -14,6 +25,8 @@ export const getArticlesByCategory = async (req, res) => {
        LIMIT 20`,
       [category]
     );
+
+    cache.set(cacheKey, result.rows);
 
     res.status(200).json(result.rows);
   } catch (error) {
@@ -28,6 +41,7 @@ export const fetchNews = async (req, res) => {
     const { category } = req.params;
 
     const result = await fetchAndStoreNews(category);
+    cache.del(`articles:${category}`);
 
     res.status(200).json({
       message: `Fetched and stored ${category} news successfully`,
