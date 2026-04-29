@@ -833,3 +833,32 @@ button {
   }
 }
 
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  font-weight: 800;
+  z-index: 9999;
+  box-shadow: 6px 6px 0 #252018;
+  border: 1px solid #252018;
+  background: #b7d7bd;
+  color: #1e1b16;
+  animation: slideIn 0.3s ease;
+}
+
+.toast.error {
+  background: #ffd0c2;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
