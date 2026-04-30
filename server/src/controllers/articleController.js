@@ -2,7 +2,7 @@ import pool from '../config/db.js';
 import { fetchAndStoreNews } from '../services/newsService.js';
 import cache from '../config/cache.js';
 
-// GET articles from DB by category
+// GET articles from DB/cache by category
 export const getArticlesByCategory = async (req, res) => {
   try {
     const { category } = req.params;
@@ -11,11 +11,11 @@ export const getArticlesByCategory = async (req, res) => {
     const cachedArticles = cache.get(cacheKey);
 
     if (cachedArticles) {
-      console.log(`Cache HIT: ${cacheKey}`);
+      console.log(`[CACHE HIT] ${cacheKey}`);
       return res.status(200).json(cachedArticles);
     }
 
-    console.log(`Cache MISS: ${cacheKey}`);
+    console.log(`[CACHE MISS] ${cacheKey} -> querying database`);
 
     const result = await pool.query(
       `SELECT id, title, summary, source, category, url, image_url, published_at
@@ -27,6 +27,7 @@ export const getArticlesByCategory = async (req, res) => {
     );
 
     cache.set(cacheKey, result.rows);
+    console.log(`[CACHE SET] ${cacheKey} -> ${result.rows.length} articles stored`);
 
     res.status(200).json(result.rows);
   } catch (error) {
@@ -41,7 +42,10 @@ export const fetchNews = async (req, res) => {
     const { category } = req.params;
 
     const result = await fetchAndStoreNews(category);
-    cache.del(`articles:${category}`);
+
+    const cacheKey = `articles:${category}`;
+    cache.del(cacheKey);
+    console.log(`[CACHE INVALIDATED] ${cacheKey} after fresh fetch`);
 
     res.status(200).json({
       message: `Fetched and stored ${category} news successfully`,
@@ -57,9 +61,20 @@ export const fetchNews = async (req, res) => {
   }
 };
 
+// GET personalized feed using user's domain_interest
 export const getPersonalizedArticles = async (req, res) => {
   try {
     const userId = req.user.id;
+    const userCacheKey = `personalized:user:${userId}`;
+
+    const cachedFeed = cache.get(userCacheKey);
+
+    if (cachedFeed) {
+      console.log(`[CACHE HIT] ${userCacheKey}`);
+      return res.status(200).json(cachedFeed);
+    }
+
+    console.log(`[CACHE MISS] ${userCacheKey} -> querying user + articles`);
 
     const userResult = await pool.query(
       'SELECT domain_interest FROM users WHERE id = $1',
@@ -81,10 +96,15 @@ export const getPersonalizedArticles = async (req, res) => {
       [domainInterest]
     );
 
-    res.status(200).json({
+    const response = {
       domain_interest: domainInterest,
       articles: articlesResult.rows,
-    });
+    };
+
+    cache.set(userCacheKey, response);
+    console.log(`[CACHE SET] ${userCacheKey} -> ${articlesResult.rows.length} articles stored`);
+
+    res.status(200).json(response);
   } catch (error) {
     console.error('Personalized feed error:', error.message);
     res.status(500).json({ message: 'Error fetching personalized feed' });
