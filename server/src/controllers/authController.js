@@ -2,8 +2,10 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import pool from '../config/db.js';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d', algorithm: 'HS256' });
 };
 
 export const registerUser = async (req, res) => {
@@ -12,6 +14,14 @@ export const registerUser = async (req, res) => {
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Name, email, and password are required' });
+    }
+
+    if (!EMAIL_REGEX.test(email)) {
+      return res.status(400).json({ message: 'Please provide a valid email address' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
     }
 
     const existingUser = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
@@ -38,6 +48,10 @@ export const registerUser = async (req, res) => {
       user,
     });
   } catch (error) {
+    if (error.code === '23505') {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+
     console.error('Register error:', error.message);
     res.status(500).json({ message: 'Server error during registration' });
   }

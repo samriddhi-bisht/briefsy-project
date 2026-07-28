@@ -16,9 +16,9 @@ export const fetchAndStoreNews = async (category) => {
     },
   });
 
-  // console.log('News API status:', response.data.status);
-  // console.log('Total results:', response.data.totalResults);
-  // console.log('Full response data:', response.data);
+  if (response.data.status !== 'ok') {
+    throw new Error(response.data.message || `NewsAPI returned an error for category: ${category}`);
+  }
 
   const articles = response.data.articles;
 

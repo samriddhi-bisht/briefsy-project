@@ -1,10 +1,16 @@
 import pool from '../config/db.js';
 
+const isValidId = (value) => /^\d+$/.test(value);
+
 // Add bookmark
 export const addBookmark = async (req, res) => {
   try {
     const userId = req.user.id;
     const { articleId } = req.params;
+
+    if (!isValidId(articleId)) {
+      return res.status(400).json({ message: 'Invalid article id' });
+    }
 
     const articleExists = await pool.query(
       'SELECT id FROM articles WHERE id = $1',
@@ -73,6 +79,10 @@ export const removeBookmark = async (req, res) => {
   try {
     const userId = req.user.id;
     const { articleId } = req.params;
+
+    if (!isValidId(articleId)) {
+      return res.status(400).json({ message: 'Invalid article id' });
+    }
 
     const result = await pool.query(
       `DELETE FROM bookmarks

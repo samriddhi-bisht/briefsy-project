@@ -12,7 +12,7 @@ export const protect = (req, res, next) => {
       return res.status(401).json({ message: 'Not authorized, no token provided' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
 
     req.user = { id: decoded.id };
     next();

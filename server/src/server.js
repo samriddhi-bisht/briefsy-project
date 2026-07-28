@@ -3,7 +3,7 @@ import app from './app.js';
 import { connectDB } from './config/db.js';
 import { startNewsFetchJob } from './jobs/newsFetchJob.js';
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const PORT = process.env.PORT || 5000;
 

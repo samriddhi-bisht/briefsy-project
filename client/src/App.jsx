@@ -20,6 +20,7 @@ function App() {
             <Route path="/login" element={token ? <Navigate to="/" /> : <Login />} />
             <Route path="/register" element={token ? <Navigate to="/" /> : <Register />} />
             <Route path="/bookmarks" element={token ? <Bookmarks /> : <Navigate to="/login" />} />
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>
       </div>

@@ -2,10 +2,24 @@ import pool from '../config/db.js';
 import { fetchAndStoreNews } from '../services/newsService.js';
 import cache from '../config/cache.js';
 
+export const VALID_CATEGORIES = [
+  'technology',
+  'business',
+  'sports',
+  'science',
+  'health',
+  'entertainment',
+];
+
 // GET articles from DB/cache by category
 export const getArticlesByCategory = async (req, res) => {
   try {
     const { category } = req.params;
+
+    if (!VALID_CATEGORIES.includes(category)) {
+      return res.status(400).json({ message: `category must be one of: ${VALID_CATEGORIES.join(', ')}` });
+    }
+
     const cacheKey = `articles:${category}`;
 
     const cachedArticles = cache.get(cacheKey);
@@ -41,6 +55,10 @@ export const fetchNews = async (req, res) => {
   try {
     const { category } = req.params;
 
+    if (!VALID_CATEGORIES.includes(category)) {
+      return res.status(400).json({ message: `category must be one of: ${VALID_CATEGORIES.join(', ')}` });
+    }
+
     const result = await fetchAndStoreNews(category);
 
     const cacheKey = `articles:${category}`;
@@ -54,10 +72,7 @@ export const fetchNews = async (req, res) => {
     });
   } catch (error) {
     console.error('Fetch news error:', error.message);
-    res.status(500).json({
-      message: 'Error fetching news',
-      error: error.message,
-    });
+    res.status(502).json({ message: 'Error fetching news from provider' });
   }
 };
 
