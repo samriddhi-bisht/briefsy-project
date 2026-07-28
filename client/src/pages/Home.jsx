@@ -15,6 +15,7 @@ const povTypes = ['all', 'supporting', 'critical', 'neutral', 'personal'];
 
 export default function Home() {
   const [category, setCategory] = useState('technology');
+  const [personalized, setPersonalized] = useState(false);
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [povs, setPovs] = useState([]);
@@ -23,8 +24,16 @@ export default function Home() {
   const [povType, setPovType] = useState('personal');
   const [povFilter, setPovFilter] = useState('all');
   const [toast, setToast] = useState(null);
+  const [personalizedDomain, setPersonalizedDomain] = useState(null);
+  const [savedIds, setSavedIds] = useState(new Set());
 
-  const activeCategory = categories.find((item) => item.key === category);
+  const isLoggedIn = Boolean(localStorage.getItem('token'));
+  const activeCategory = personalized
+    ? categories.find((item) => item.key === personalizedDomain) || {
+        label: 'For You',
+        note: 'personalized picks',
+      }
+    : categories.find((item) => item.key === category);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -33,15 +42,32 @@ export default function Home() {
   const fetchArticles = async () => {
     try {
       setLoading(true);
-      const res = await API.get(`/articles/category/${category}`);
-      setArticles(res.data);
+
+      if (personalized) {
+        const res = await API.get('/articles/personalized');
+        setPersonalizedDomain(res.data.domain_interest);
+        setArticles(res.data.articles);
+      } else {
+        const res = await API.get(`/articles/category/${category}`);
+        setArticles(res.data);
+      }
+
       setSelectedArticle(null);
       setPovs([]);
-    } catch (error) {
+    } catch {
       showToast('Failed to fetch articles', 'error');
     } finally {
       setLoading(false);
     }
+  };
+
+  const selectCategory = (key) => {
+    setPersonalized(false);
+    setCategory(key);
+  };
+
+  const togglePersonalized = () => {
+    setPersonalized((prev) => !prev);
   };
 
   const openPerspectives = async (article) => {
@@ -51,7 +77,7 @@ export default function Home() {
 
       const res = await API.get(`/povs/${article.id}`);
       setPovs(res.data);
-    } catch (error) {
+    } catch {
       showToast('Could not load perspectives', 'error');
     }
   };
@@ -93,6 +119,7 @@ export default function Home() {
   const bookmarkArticle = async (articleId) => {
     try {
       await API.post(`/bookmarks/${articleId}`);
+      setSavedIds((prev) => new Set(prev).add(articleId));
       showToast('Saved to your desk');
     } catch (error) {
       showToast(error.response?.data?.message || 'Bookmark failed', 'error');
@@ -101,7 +128,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchArticles();
-  }, [category]);
+  }, [category, personalized]);
 
   const filteredPovs =
     povFilter === 'all' ? povs : povs.filter((pov) => pov.pov_type === povFilter);
@@ -121,12 +148,24 @@ export default function Home() {
           <p className="eyebrow">News rooms</p>
           <h2>Choose a lens</h2>
 
+          {isLoggedIn && (
+            <button
+              className={personalized ? 'lens-btn active personalized-btn' : 'lens-btn personalized-btn'}
+              onClick={togglePersonalized}
+            >
+              <span>For You</span>
+              <small>personalized picks based on your interests</small>
+            </button>
+          )}
+
           <div className="category-list">
             {categories.map((item) => (
               <button
                 key={item.key}
-                className={category === item.key ? 'lens-btn active' : 'lens-btn'}
-                onClick={() => setCategory(item.key)}
+                className={
+                  !personalized && category === item.key ? 'lens-btn active' : 'lens-btn'
+                }
+                onClick={() => selectCategory(item.key)}
               >
                 <span>{item.label}</span>
                 <small>{item.note}</small>
@@ -167,7 +206,12 @@ export default function Home() {
                     <a href={article.url} target="_blank" rel="noreferrer">
                       Original
                     </a>
-                    <button onClick={() => bookmarkArticle(article.id)}>Save</button>
+                    <button
+                      onClick={() => bookmarkArticle(article.id)}
+                      disabled={savedIds.has(article.id)}
+                    >
+                      {savedIds.has(article.id) ? 'Saved' : 'Save'}
+                    </button>
                     <button onClick={() => openPerspectives(article)}>Discuss</button>
                   </div>
                 </article>

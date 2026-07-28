@@ -8,7 +8,7 @@ import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.get('/fetch/:category', fetchNews);
+router.get('/fetch/:category', protect, fetchNews);
 router.get('/category/:category', getArticlesByCategory);
 router.get('/personalized', protect, getPersonalizedArticles);
 

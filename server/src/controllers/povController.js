@@ -1,13 +1,25 @@
 import pool from '../config/db.js';
 
+const POV_TYPES = ['supporting', 'critical', 'neutral', 'personal'];
+
+const isValidId = (value) => /^\d+$/.test(value);
+
 export const createPov = async (req, res) => {
   try {
     const userId = req.user.id;
     const { articleId } = req.params;
     const { content, pov_type } = req.body;
 
+    if (!isValidId(articleId)) {
+      return res.status(400).json({ message: 'Invalid article id' });
+    }
+
     if (!content || content.trim().length < 5) {
       return res.status(400).json({ message: 'POV must be at least 5 characters long' });
+    }
+
+    if (pov_type && !POV_TYPES.includes(pov_type)) {
+      return res.status(400).json({ message: `pov_type must be one of: ${POV_TYPES.join(', ')}` });
     }
 
     const articleExists = await pool.query('SELECT id FROM articles WHERE id = $1', [articleId]);
@@ -36,6 +48,10 @@ export const createPov = async (req, res) => {
 export const getPovsByArticle = async (req, res) => {
   try {
     const { articleId } = req.params;
+
+    if (!isValidId(articleId)) {
+      return res.status(400).json({ message: 'Invalid article id' });
+    }
 
     const result = await pool.query(
       `SELECT 
@@ -67,6 +83,10 @@ export const votePov = async (req, res) => {
     const userId = req.user.id;
     const { povId } = req.params;
     const { vote_type } = req.body;
+
+    if (!isValidId(povId)) {
+      return res.status(400).json({ message: 'Invalid POV id' });
+    }
 
     if (!['up', 'down'].includes(vote_type)) {
       return res.status(400).json({ message: 'vote_type must be up or down' });
@@ -101,6 +121,10 @@ export const deletePov = async (req, res) => {
   try {
     const userId = req.user.id;
     const { povId } = req.params;
+
+    if (!isValidId(povId)) {
+      return res.status(400).json({ message: 'Invalid POV id' });
+    }
 
     const result = await pool.query(
       `DELETE FROM povs
